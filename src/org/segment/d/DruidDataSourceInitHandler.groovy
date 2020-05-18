@@ -1,4 +1,4 @@
-package com.segment.d
+package org.segment.d
 
 import com.alibaba.druid.pool.DruidDataSource
 import groovy.transform.CompileStatic

@@ -1,4 +1,4 @@
-package com.segment.d
+package org.segment.d
 
 import com.alibaba.druid.pool.DruidDataSource
 import org.h2.tools.Server

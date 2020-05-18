@@ -1,4 +1,4 @@
-package com.segment.d
+package org.segment.d
 
 import com.esotericsoftware.reflectasm.MethodAccess
 import groovy.transform.CompileStatic
