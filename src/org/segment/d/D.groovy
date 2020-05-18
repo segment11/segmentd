@@ -6,6 +6,9 @@ import groovy.util.logging.Slf4j
 import org.apache.commons.beanutils.PropertyUtils
 import org.apache.commons.io.IOUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
+import org.segment.d.json.JSONFiled
+import org.segment.d.json.JsonReader
+import org.segment.d.json.JsonWriter
 
 import javax.sql.DataSource
 import java.lang.reflect.Array
@@ -129,10 +132,6 @@ class D {
         r
     }
 
-    private Map<String, Object> bean2mapInner(Object one) {
-        bean2map(one, skipProperties)
-    }
-
     static Map<String, Object> bean2map(Object one, Set<String> skipPropertySet = null) {
         Set<String> skipSet = new HashSet<>(skipPropertiesDefault)
         if (skipPropertySet) {
@@ -222,6 +221,8 @@ class D {
             if (obj instanceof Date) {
                 Date date = obj as Date
                 r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : date.format(ymdhms))
+            } else if (obj instanceof JSONFiled) {
+                r.add(JsonWriter.instance.json(obj))
             } else {
                 r.add(obj)
             }
@@ -355,10 +356,20 @@ class D {
                         finalLabel = label
                     }
 
-                    int type = colsType.get(i)
-                    String methodName = 'set' + toCamel(finalLabel, false)
-                    def reflector = BeanReflector.get(clz, methodName, d.getClassTypeBySqlType(type))
-                    if (reflector == null) {
+                    def fieldType = d.getClassTypeBySqlType(colsType.get(i))
+                    // check if is a json field
+                    if (fieldType == String) {
+                        String methodGetName = 'get' + toCamel(finalLabel, false)
+                        def methodGet = BeanReflector.get(clz, methodGetName)
+                        if (methodGet.returnType.interfaces.any { it == JSONFiled }) {
+                            fieldType = methodGet.returnType
+                            obj = JsonReader.instance.read(obj.toString(), fieldType)
+                        }
+                    }
+
+                    String methodSetName = 'set' + toCamel(finalLabel, false)
+                    def methodSet = BeanReflector.get(clz, methodSetName, fieldType)
+                    if (methodSet == null) {
                         if (!isRecord) {
                             continue
                         } else {
@@ -367,7 +378,7 @@ class D {
                             continue
                         }
                     }
-                    reflector.invoke(t, obj)
+                    methodSet.invoke(t, obj)
                 }
             }
 

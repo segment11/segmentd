@@ -1,8 +1,13 @@
 package org.segment.d
 
+import org.segment.d.json.JSONFiled
 import spock.lang.Specification
 
 class DTest extends Specification {
+
+    static class Grade implements JSONFiled {
+        Integer level
+    }
 
     static class User {
         Integer id
@@ -17,10 +22,11 @@ class DTest extends Specification {
     static class Student {
         Integer id
         String studentName
+        Grade grade
 
         @Override
         String toString() {
-            '' + id + ':' + studentName
+            '' + id + ':' + studentName + ':' + grade?.level
         }
     }
 
@@ -72,20 +78,22 @@ name varchar(50)
         d.exe('''
 create table a(
 id int,
-student_name varchar(50)
+student_name varchar(50),
+grade varchar(200)
 )
 ''')
         10.times {
             d.add([id: it + 1, studentName: 'kerry' + it], 'a')
             d.add([id: it + 10, student_name: 'kerry' + it], 'a', false)
-            d.add(new Student(id: it + 20, studentName: 'kerry' + it), 'a')
+            d.add(new Student(id: it + 20, studentName: 'kerry' + it, grade: new Grade(level: 1)), 'a')
         }
         d.update([id: 2, studentName: 'kerry2!'], 'a', 'id')
         expect:
         d.one('select count(id) as a from a') == [a: 30]
         d.query('select * from a limit 1')[0] == [id: 1, studentName: 'kerry0']
         d.query('select * from a limit 1', Student)[0].studentName == 'kerry0'
-        d.query('select * from a where id = ?', [2], Student)[0].studentName == 'kerry2!'
+        d.one('select * from a where id = ?', [2], Student).studentName == 'kerry2!'
+        d.one('select * from a where id = ?', [21], Student).grade.level == 1
         cleanup:
         ds.closeConnect()
     }
