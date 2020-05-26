@@ -33,7 +33,7 @@ class D {
         return dialect
     }
 
-    private boolean addReturnPk = false
+    private boolean addReturnPk = true
 
     void addReturnPk(boolean addReturnPk) {
         this.addReturnPk = addReturnPk

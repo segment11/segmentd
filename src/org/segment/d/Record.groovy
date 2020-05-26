@@ -81,6 +81,10 @@ abstract class Record<V extends Record> implements Serializable {
     }
 
     public <T> T asType(Class<T> clz, Map<String, String> fieldMapping = null) {
+        if (clz == this.class) {
+            return (T) this
+        }
+
         def props = rawProps(true)
 
         T t = clz.newInstance()

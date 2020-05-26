@@ -42,7 +42,7 @@ class Ds {
         cached[name]
     }
 
-    Ds cacheAs(String name) {
+    Ds cacheAs(String name = 'default') {
         cached[name] = this
         this
     }
