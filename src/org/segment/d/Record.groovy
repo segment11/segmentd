@@ -1,5 +1,6 @@
 package org.segment.d
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
@@ -297,8 +298,11 @@ abstract class Record<V extends Record> implements Serializable {
         list
     }
 
+    @JsonIgnore
     int pageNum = 0
+    @JsonIgnore
     int pageSize = 10
+
     protected Pager pager
 
     Pager<V> loadPager() {

@@ -273,6 +273,16 @@ class D {
         } else if (obj instanceof Clob) {
             Clob clob = obj as Clob
             return new String(IOUtils.toCharArray(clob.characterStream))
+        } else if (obj instanceof Byte) {
+            def type = classTypeBySqlType[Types.TINYINT]
+            if (type != Byte) {
+                return DefaultGroovyMethods.asType(obj, type)
+            }
+        } else if (obj instanceof Short) {
+            def type = classTypeBySqlType[Types.SMALLINT]
+            if (type != Short) {
+                return DefaultGroovyMethods.asType(obj, type)
+            }
         } else {
             return obj
         }

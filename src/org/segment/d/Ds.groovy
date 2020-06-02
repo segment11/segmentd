@@ -279,7 +279,7 @@ class Ds {
         final String pre = metricKeyForDataSourcePre + dataSourceNameForStat + '-'
 
         metricGaugeRegister.register(pre + 'collectTime') {
-            statInfo ? statInfo.time.format('yyyy-MM-dd HH:mm:ss') : ''
+            statInfo ? statInfo.time.format(D.ymdhms) : ''
         }
         metricGaugeRegister.register(pre + 'sqlSet') {
             alreadyRegisterSqlSet
