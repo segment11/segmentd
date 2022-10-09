@@ -1,0 +1,6 @@
+rootProject.name = 'jdbc_tx'
+
+include ':segmentd'
+project(':segmentd').projectDir = new File(settingsDir, '..')
+
+
