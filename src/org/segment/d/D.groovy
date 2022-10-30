@@ -239,6 +239,7 @@ class D {
         classTypeBySqlType[Types.DECIMAL] = Double
         classTypeBySqlType[Types.DOUBLE] = Double
         classTypeBySqlType[Types.BIT] = Boolean
+        classTypeBySqlType[Types.BOOLEAN] = Boolean
         classTypeBySqlType[Types.TINYINT] = Byte
         classTypeBySqlType[Types.SMALLINT] = Short
         classTypeBySqlType[Types.INTEGER] = Integer
@@ -501,6 +502,39 @@ class D {
             update(map2, table, pkCol, false)
         } else {
             update(map, table, pkCol, false)
+        }
+    }
+
+    private static String addMergeFieldPrefix(String prefix, String field) {
+        if (!prefix) {
+            return field
+        }
+        prefix + field[0].toUpperCase() + field[1..-1]
+    }
+
+    static void mergeFields(List<Record> list, List<Record> mergedList, String field, String matchField, String prefix,
+                            String... mergedFields) {
+        mergedList.each { m ->
+            list.findAll {
+                it.getProperty(field) == m.getProperty(matchField)
+            }.each {
+                for (f in mergedFields) {
+                    it.prop(addMergeFieldPrefix(prefix, f), m.getProperty(f))
+                }
+            }
+        }
+    }
+
+    static void mergeFieldsToMap(List<Map> list, List<Record> mergedList, String field, String matchField, String prefix,
+                                 String... mergedFields) {
+        mergedList.each { m ->
+            list.findAll {
+                it[field] == m.getProperty(matchField)
+            }.each {
+                for (f in mergedFields) {
+                    it.put(addMergeFieldPrefix(prefix, f), m.getProperty(f))
+                }
+            }
         }
     }
 }

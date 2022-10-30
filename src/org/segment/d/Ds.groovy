@@ -47,6 +47,12 @@ class Ds {
         this
     }
 
+    static synchronized void disconnectAll() {
+        cached.each { k, v ->
+            v.closeConnect()
+        }
+    }
+
     private String jdbcUrl
     private DBType dbType
     private String dbTypeOtherName
@@ -96,8 +102,10 @@ class Ds {
     static Ds dbType(DBType dbType) {
         def ds = new Ds(dbType: dbType)
         if (dbType == DBType.mysql) {
+            ds.urlParam('useSSL', false)
             ds.urlParam('useUnicode', true)
             ds.urlParam('characterEncoding', ENCODING)
+            ds.urlParam('serverTimezone', 'UTC')
         }
         ds
     }
@@ -164,13 +172,14 @@ class Ds {
         myNameCached
     }
 
-    boolean isConnected = false
+    volatile boolean isConnected = false
 
     synchronized Ds connect(String ip, int port, String db, String user, String password) {
         assert !dataSource
         assert dbType || dbTypeOtherName
 
         this.jdbcUrl = generateJdbcUrl(ip, port, db)
+        log.info jdbcUrl
         this.user = user
         this.password = password
 
@@ -227,9 +236,10 @@ class Ds {
     }
 
     synchronized void closeConnect() {
-        assert isConnected
-        sql.close()
-        log.info 'close connect - ' + myName()
+        if (sql) {
+            sql.close()
+            log.info 'close connect - ' + myName()
+        }
         if (dataSource) {
             if (collector) {
                 collector.shutdown()
@@ -237,7 +247,6 @@ class Ds {
             }
             dataSource.close()
             log.info 'close druid data source - ' + myName()
-
         }
         isConnected = false
     }
