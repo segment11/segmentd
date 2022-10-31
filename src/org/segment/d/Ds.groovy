@@ -42,6 +42,10 @@ class Ds {
         cached[name]
     }
 
+    static Ds remove(String name = 'default') {
+        cached.remove(name)
+    }
+
     Ds cacheAs(String name = 'default') {
         cached[name] = this
         this
@@ -223,7 +227,16 @@ class Ds {
         this.sql = new Sql(dataSource)
         this.isConnected = true
 
-        startCollectDruidDataSourceStatsInterval()
+        if (collectStats) {
+            startCollectDruidDataSourceStatsInterval()
+        }
+        this
+    }
+
+    private boolean collectStats = false
+
+    synchronized Ds collectStats(boolean flag = true) {
+        this.collectStats = flag
         this
     }
 
