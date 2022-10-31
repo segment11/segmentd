@@ -92,7 +92,7 @@ class Ds {
                 })
         dbTypeOthers[DBType.postgresql.name()] = new DBTypeInfo(driver: 'org.postgresql.Driver',
                 generator: { String ip, int port, String db ->
-                    "jdbc:posgresql://${ip}:${port}/${db}".toString()
+                    "jdbc:postgresql://${ip}:${port}/${db}".toString()
                 })
     }
 
