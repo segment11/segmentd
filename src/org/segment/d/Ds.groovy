@@ -222,7 +222,7 @@ class Ds {
             dataSourceInitHandler.set(dataSource)
         }
         dataSource.init()
-        log.info 'done create druid data source ' + myName()
+        log.info 'done create druid data source {}', myName()
 
         this.sql = new Sql(dataSource)
         this.isConnected = true
@@ -251,15 +251,15 @@ class Ds {
     synchronized void closeConnect() {
         if (sql) {
             sql.close()
-            log.info 'close connect - ' + myName()
+            log.info 'close connect - {}', myName()
         }
         if (dataSource) {
             if (collector) {
                 collector.shutdown()
-                log.info 'stop collect druid data source stats interval - ' + myName()
+                log.info 'stop collect druid data source stats interval - {}', myName()
             }
             dataSource.close()
-            log.info 'close druid data source - ' + myName()
+            log.info 'close druid data source - {}', myName()
         }
         isConnected = false
     }
@@ -328,7 +328,7 @@ class Ds {
                 val
             }
         }
-        log.info 'register data source stat for - ' + dataSourceNameForStat
+        log.info 'register data source stat for - {}', dataSourceNameForStat
         this
     }
 
@@ -401,10 +401,10 @@ class Ds {
                     })
                 }
                 alreadyRegisterSqlSet << targetSql
-                log.info 'register sql stat for ' + targetSql
+                log.info 'register sql stat for {}', targetSql
             }
         }, nextSecDelay * 1000, collectDruidDataSourceStatsIntervalMillis, TimeUnit.MILLISECONDS)
-        log.info 'start collect druid data source stats interval - ' + dataSource.name
+        log.info 'start collect druid data source stats interval - {}', dataSource.name
     }
 
     private volatile StatInfo statInfo
