@@ -4,7 +4,6 @@ import groovy.sql.Sql
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.commons.beanutils.PropertyUtils
-import org.apache.commons.io.IOUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 import org.segment.d.json.JSONFiled
 import org.segment.d.json.JsonReader
@@ -16,6 +15,7 @@ import java.sql.Clob
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.sql.Types
+import java.text.SimpleDateFormat
 
 @CompileStatic
 @Slf4j
@@ -220,7 +220,7 @@ class D {
         for (obj in args) {
             if (obj instanceof Date) {
                 Date date = obj as Date
-                r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : date.format(ymdhms))
+                r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : new SimpleDateFormat(ymdhms).format(date))
             } else if (obj instanceof JSONFiled) {
                 r.add(JsonWriter.instance.json(obj))
             } else {
@@ -273,7 +273,7 @@ class D {
             return decimal.doubleValue()
         } else if (obj instanceof Clob) {
             Clob clob = obj as Clob
-            return new String(IOUtils.toCharArray(clob.characterStream))
+            return toCharString(clob.characterStream)
         } else if (obj instanceof Byte) {
             def type = classTypeBySqlType[Types.TINYINT]
             if (type != Byte) {
@@ -287,6 +287,17 @@ class D {
         } else {
             return obj
         }
+    }
+
+    private String toCharString(Reader reader) {
+        char[] arr = new char[8 * 1024]
+        def buffer = new StringBuilder()
+        int numCharsRead
+        while ((numCharsRead = reader.read(arr, 0, arr.length)) != -1) {
+            buffer.append(arr, 0, numCharsRead)
+        }
+        reader.close()
+        buffer.toString()
     }
 
     void exe(String sql, List args = null) {

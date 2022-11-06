@@ -15,7 +15,7 @@ class RecordBeanSourceCreator {
 
     DialectType dialectType = DialectType.MySQL
 
-    Map<String, String> rowToBean(String table) {
+    Map<String, Class> rowToBean(String table) {
         def r = [:]
         String sql = "select * from ${table} limit 1"
         d.db.query(sql) { ResultSet rs ->

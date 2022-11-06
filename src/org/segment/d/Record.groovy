@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
+import java.text.SimpleDateFormat
+
 @CompileStatic
 @Slf4j
 abstract class Record<V extends Record> implements Serializable {
@@ -160,7 +162,7 @@ abstract class Record<V extends Record> implements Serializable {
     protected String valueToSqlString(Object obj) {
         if (obj instanceof Date) {
             def date = obj as Date
-            return "to_date('${date.format(D.ymdhms)}', 'yyyy-MM-dd hh24:mi:ss')"
+            return "to_date('${new SimpleDateFormat(D.ymdhms).format(date)}', 'yyyy-MM-dd hh24:mi:ss')"
         } else if (obj instanceof String) {
             return "'${obj}'"
         } else {

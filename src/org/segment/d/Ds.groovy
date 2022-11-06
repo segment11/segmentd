@@ -7,8 +7,8 @@ import groovy.sql.Sql
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.commons.beanutils.PropertyUtils
-import org.apache.commons.codec.digest.DigestUtils
 
+import java.text.SimpleDateFormat
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -301,14 +301,14 @@ class Ds {
         final String pre = metricKeyForDataSourcePre + dataSourceNameForStat + '-'
 
         metricGaugeRegister.register(pre + 'collectTime') {
-            statInfo ? statInfo.time.format(D.ymdhms) : ''
+            statInfo ? new SimpleDateFormat(D.ymdhms).format(statInfo.time) : ''
         }
         metricGaugeRegister.register(pre + 'sqlSet') {
             alreadyRegisterSqlSet
         }
 
         def props = new DruidDataSourceStatValue().properties.findAll { k, v ->
-            v != null && v instanceof Number
+            !k.toString().startsWith('txn_') && v != null && v instanceof Number
         }
         props.each { k, v ->
             metricGaugeRegister.register(pre + k) {
@@ -371,7 +371,7 @@ class Ds {
                     return
                 }
 
-                final String namePre = metricKeyForSqlPre + dataSourceNameForStat + '-' + DigestUtils.md5Hex(targetSql) + '__'
+                final String namePre = metricKeyForSqlPre + dataSourceNameForStat + '-' + targetSql.hashCode() + '__'
                 props.each { k, v ->
                     // executeAndResultSetHoldTime no getter method
                     if ('executeAndResultSetHoldTime' == k.toString()) {

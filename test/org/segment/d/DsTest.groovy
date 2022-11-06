@@ -37,20 +37,23 @@ class DsTest extends Specification {
                 gauges[name] = getter
             }
         }
-        def ds = Ds.dbType(Ds.DBType.h2).dataSourceInitHandler { DruidDataSource ds ->
-            ds.testOnBorrow = true
+        def ds = Ds.dbType(Ds.DBType.h2).dataSourceInitHandler { DruidDataSource dsInner ->
+            dsInner.testOnBorrow = true
         }.filters('mergeStat').
+                collectStats().
                 collectDruidDataSourceStatsIntervalMillis(5 * 1000).
                 maxStatSqlSize(10).
                 addSqlStatCollectProperty('executeSuccessCount').
                 metricGaugeRegister(register).
                 urlParam('useUnicode', true).
                 connectWithPool('127.0.0.1', 8043, '~/test', 'sa', null, 1, 2).
+                collectDruidDataSourceStatsIntervalMillis(5000).
                 registerDataSourceStats()
         expect:
         ds.sql.firstRow('SELECT 1 AS a').a == 1
 
         when:
+        println 'sleep a while and wait collect stats'
         Thread.sleep(1000 * 10)
         then:
         def stat = ds.findSqlStatByKeyword('AS')
