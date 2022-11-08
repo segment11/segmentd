@@ -14,6 +14,18 @@ class Pager<T> {
         this.pageSize = pageSize
     }
 
+    Pager transfer(Closure closure) {
+        def pager = new Pager(this.pageNum, this.pageSize)
+        pager.totalCount = this.totalCount
+        if (this.list) {
+            pager.list = []
+            for (T one in this.list) {
+                pager.list.add(closure.call(one))
+            }
+        }
+        pager
+    }
+
     int getTotalPage() {
         int r = (totalCount / pageSize) as int
         totalCount % pageSize == 0 ? r : r + 1
