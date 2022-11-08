@@ -123,8 +123,8 @@ abstract class Record<V extends Record> implements Serializable {
         rawProps().findAll { it.value != null }
     }
 
-    Object add() {
-        useD().add(rawPropsWithValue(), tbl())
+    Integer add() {
+        useD().add(rawPropsWithValue(), tbl()) as Integer
     }
 
     int update() {
@@ -305,7 +305,7 @@ abstract class Record<V extends Record> implements Serializable {
     @JsonIgnore
     int pageSize = 10
 
-    protected Pager pager
+    protected Pager<V> pager
 
     Pager<V> loadPager() {
         loadPager(pageNum, pageSize)
