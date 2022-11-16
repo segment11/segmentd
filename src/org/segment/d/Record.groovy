@@ -35,12 +35,12 @@ abstract class Record<V extends Record> implements Serializable {
         tableName
     }
 
-    Record tableNameReset(String tableName) {
+    Record<V> tableNameReset(String tableName) {
         this.tableName = tableName
         this
     }
 
-    Record setProperties(Map<String, Object> properties) {
+    Record<V> setProperties(Map<String, Object> properties) {
         for (entry in properties) {
             setProperty(entry.key, entry.value)
         }
@@ -186,30 +186,30 @@ abstract class Record<V extends Record> implements Serializable {
 
     private String fieldsToQuery
 
-    Record queryFields(String fieldsToQuery) {
+    Record<V> queryFields(String fieldsToQuery) {
         this.fieldsToQuery = D.toUnderline(fieldsToQuery)
         this
     }
 
-    Record queryFieldsExclude(String fieldsToQueryExclude) {
+    Record<V> queryFieldsExclude(String fieldsToQueryExclude) {
         String exclude = D.toUnderline(fieldsToQueryExclude)
         this.fieldsToQuery = (tableFields().split(',') - exclude.split(',')).join(',')
         this
     }
 
-    Record whereReset() {
+    Record<V> whereReset() {
         whereClause.delete(0, whereClause.length())
         whereArgs.clear()
         orderByClause = ''
         this
     }
 
-    Record orderBy(String orderByClause) {
+    Record<V> orderBy(String orderByClause) {
         this.orderByClause = orderByClause
         this
     }
 
-    Record where(boolean flag, String clause, Object... args = null) {
+    Record<V> where(boolean flag, String clause, Object... args = null) {
         if (flag) {
             whereClause << ' and ('
             whereClause << clause
@@ -225,11 +225,11 @@ abstract class Record<V extends Record> implements Serializable {
         this
     }
 
-    Record where(String clause, Object... args = null) {
+    Record<V> where(String clause, Object... args = null) {
         where(true, clause, args)
     }
 
-    Record whereIn(String field, List list, boolean withQuote = true) {
+    Record<V> whereIn(String field, List list, boolean withQuote = true) {
         String wrapString = list.collect {
             if (withQuote) {
                 return "'" + it + "'"
@@ -240,7 +240,7 @@ abstract class Record<V extends Record> implements Serializable {
         where("${field} in (${wrapString})")
     }
 
-    Record whereNotIn(String field, List list, boolean withQuote = true) {
+    Record<V> whereNotIn(String field, List list, boolean withQuote = true) {
         String wrapString = list.collect {
             if (withQuote) {
                 return "'" + it + "'"

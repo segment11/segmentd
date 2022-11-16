@@ -14,7 +14,7 @@ class RecordTest extends Specification {
         }
     }
 
-    private static class StudentBaseInfoDTO extends Record {
+    private static class StudentBaseInfoDTO extends Record<StudentBaseInfoDTO> {
         Integer id
         String studentName
         Integer age
@@ -80,7 +80,7 @@ age int
         StudentBaseInfoDTO z = new StudentBaseInfoDTO(id: 3, d: d)
         z.load()
         def queryList = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
-                whereNotIn('id', [3], false).loadList() as List<StudentBaseInfoDTO>
+                whereNotIn('id', [3], false).loadList()
         def queryList2 = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
                 whereReset().where('id>?', 6).orderBy('id desc').loadList(2) as List<StudentBaseInfoDTO>
         def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').loadPager() as Pager<StudentBaseInfoDTO>

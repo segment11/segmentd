@@ -14,11 +14,11 @@ class Pager<T> {
         this.pageSize = pageSize
     }
 
-    Pager transfer(Closure closure) {
+    public <V> Pager<V> transfer(Closure<V> closure) {
         def pager = new Pager(this.pageNum, this.pageSize)
         pager.totalCount = this.totalCount
         if (this.list) {
-            pager.list = []
+            pager.list = new LinkedList<V>()
             for (T one in this.list) {
                 pager.list.add(closure.call(one))
             }
