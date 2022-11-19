@@ -1,6 +1,7 @@
 package org.segment.d.json
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.transform.CompileStatic
 
@@ -15,6 +16,11 @@ class DefaultJsonTransformer implements JsonTransformer {
 
     @Override
     <T> T read(String string, Class<T> clz) {
+        new ObjectMapper().readValue(string, clz)
+    }
+
+    @Override
+    <T> T read(String string, TypeReference<T> clz) {
         new ObjectMapper().readValue(string, clz)
     }
 }
