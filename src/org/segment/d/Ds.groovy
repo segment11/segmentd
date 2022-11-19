@@ -246,8 +246,9 @@ class Ds {
         dbType(DBType.h2Local).connect(null, 0, db, 'sa', null)
     }
 
-    static Ds h2LocalWithPool(String db) {
-        dbType(DBType.h2Local).connectWithPool(null, 0, db, 'sa', null, 1, 1)
+    static Ds h2LocalWithPool(String db, String dsName) {
+        dbType(DBType.h2Local).cacheAs(dsName).
+                connectWithPool(null, 0, db, 'sa', null, 1, 1)
     }
 
     synchronized void closeConnect() {
