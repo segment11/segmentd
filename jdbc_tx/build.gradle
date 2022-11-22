@@ -31,8 +31,8 @@ sourceSets {
 }
 
 dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.30'
-    compile 'org.codehaus.groovy:groovy-all:2.4.19'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.4.19'
     compile group: 'com.h2database', name: 'h2', version: '1.4.200'
 
     compile group: 'org.springframework', name: 'spring-jdbc', version: '4.3.30.RELEASE'
