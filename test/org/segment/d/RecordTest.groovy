@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 class RecordTest extends Specification {
 
-    private static class UserDTO extends Record {
+    private static class UserDTO extends Record<UserDTO> {
         Integer id
         String name
 
@@ -73,17 +73,17 @@ age int
             student.id = it + 1
             student.add()
         }
-        StudentBaseInfoDTO x = new StudentBaseInfoDTO(id: 1, d: d).
+        def x = new StudentBaseInfoDTO(id: 1, d: d).
                 queryFields('studentName').queryFieldsExclude('id').one()
         int givenId = 2
-        StudentBaseInfoDTO y = new StudentBaseInfoDTO(d: d).where(givenId != 0, 'id=?', givenId).one()
-        StudentBaseInfoDTO z = new StudentBaseInfoDTO(id: 3, d: d)
+        def y = new StudentBaseInfoDTO(d: d).where(givenId != 0, 'id=?', givenId).one()
+        def z = new StudentBaseInfoDTO(id: 3, d: d)
         z.load()
         def queryList = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
                 whereNotIn('id', [3], false).loadList()
         def queryList2 = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
-                whereReset().where('id>?', 6).orderBy('id desc').loadList(2) as List<StudentBaseInfoDTO>
-        def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').loadPager() as Pager<StudentBaseInfoDTO>
+                whereReset().where('id>?', 6).orderBy('id desc').loadList(2)
+        def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').loadPager()
         expect:
         x.studentName == 'kerry'
         y.id == 2

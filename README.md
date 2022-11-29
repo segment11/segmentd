@@ -5,19 +5,19 @@ ActiveRecord Style RMDB Database Access Library For Groovy Developers.
 
 > 1. Ds.groovy -> a Groovy Sql creator for different database types.
 > 2. D.groovy -> a DAL wrapped Groovy Sql object to do ddl/dml.
-> 3. Record.groovy -> a base class to create object that stand for a RMDB table's row data, like a JPA object.
+> 3. Record.groovy -> a base class to create objects that stand for a database table's row data, like a JPA object.
 
 ## Unit tests using Spock
 
 ## Chain operation style
 ```groovy
-package com.segment.d
+package org.segment.d
 
 import spock.lang.Specification
 
 class RecordTest extends Specification {
 
-    private static class UserDTO extends Record {
+    private static class UserDTO extends Record<UserDTO> {
         Integer id
         String name
 
@@ -27,7 +27,7 @@ class RecordTest extends Specification {
         }
     }
 
-    private static class StudentBaseInfoDTO extends Record {
+    private static class StudentBaseInfoDTO extends Record<StudentBaseInfoDTO> {
         Integer id
         String studentName
         Integer age
@@ -86,17 +86,17 @@ age int
             student.id = it + 1
             student.add()
         }
-        StudentBaseInfoDTO x = new StudentBaseInfoDTO(id: 1, d: d).
+        def x = new StudentBaseInfoDTO(id: 1, d: d).
                 queryFields('studentName').queryFieldsExclude('id').one()
         int givenId = 2
-        StudentBaseInfoDTO y = new StudentBaseInfoDTO(d: d).where(givenId != 0, 'id=?', givenId).one()
-        StudentBaseInfoDTO z = new StudentBaseInfoDTO(id: 3, d: d)
+        def y = new StudentBaseInfoDTO(d: d).where(givenId != 0, 'id=?', givenId).one()
+        def z = new StudentBaseInfoDTO(id: 3, d: d)
         z.load()
         def queryList = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
-                whereNotIn('id', [3], false).loadList() as List<StudentBaseInfoDTO>
+                whereNotIn('id', [3], false).loadList()
         def queryList2 = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
-                whereReset().where('id>?', 6).orderBy('id desc').loadList(2) as List<StudentBaseInfoDTO>
-        def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').loadPager() as Pager<StudentBaseInfoDTO>
+                whereReset().where('id>?', 6).orderBy('id desc').loadList(2)
+        def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').loadPager()
         expect:
         x.studentName == 'kerry'
         y.id == 2
@@ -112,5 +112,4 @@ age int
         ds.closeConnect()
     }
 }
-
 ```
