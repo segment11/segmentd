@@ -73,6 +73,10 @@ class Ds {
         sql
     }
 
+    DruidDataSource getDataSource() {
+        return dataSource
+    }
+
     static {
         dbTypeOthers[DBType.h2.name()] = new DBTypeInfo(driver: 'org.h2.Driver',
                 generator: { String ip, int port, String db ->

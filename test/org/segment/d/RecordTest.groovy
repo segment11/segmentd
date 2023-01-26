@@ -98,4 +98,35 @@ age int
         cleanup:
         ds.closeConnect()
     }
+
+    def 'transaction support'() {
+        given:
+        def ds = Ds.h2mem('test')
+        def d = new D(ds, new MySQLDialect())
+        d.exe('''
+create table student_base_info(
+id int,
+student_name varchar(50),
+age int
+)
+''')
+        def student = new StudentBaseInfoDTO(id: 1, studentName: 'kerry', age: 32)
+        student.d = d
+
+        ds.sql.withTransaction {
+            10.times {
+                student.id = it + 1
+                student.add()
+            }
+        }
+
+        def totalCount = new StudentBaseInfoDTO().withD(d).
+                queryFields('id').noWhere().loadList().size()
+
+        expect:
+        totalCount == 10
+
+        cleanup:
+        ds.closeConnect()
+    }
 }

@@ -9,10 +9,15 @@ import java.text.SimpleDateFormat
 @CompileStatic
 @Slf4j
 abstract class Record<V extends Record> implements Serializable {
-    private D d
+    protected D d
 
     void setD(D d) {
         this.d = d
+    }
+
+    Record<V> withD(D d) {
+        this.d = d
+        this
     }
 
     D useD() {
@@ -249,6 +254,10 @@ abstract class Record<V extends Record> implements Serializable {
             }
         }.join(',')
         where("${field} not in (${wrapString})")
+    }
+
+    Record<V> noWhere() {
+        where('1=1')
     }
 
     List<V> loadList(int maxLimitNum = 0) {
