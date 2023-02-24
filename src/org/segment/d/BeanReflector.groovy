@@ -39,17 +39,21 @@ class BeanReflector {
     static MethodAccess getMaCached(Class clz) {
         String key = clz.getName()
         def ma = cachedMa[key]
-        if (ma == null) {
-            def ma2 = MethodAccess.get(clz)
-            cachedMa[key] = ma2
-            return ma2
-        } else {
+        if (ma != null) {
             return ma
+        }
+
+        def ma2 = MethodAccess.get(clz)
+        def old = cachedMa.putIfAbsent(key, ma2)
+        if (old) {
+            return old
+        } else {
+            return ma2
         }
     }
 
     static BeanReflector get(Class clz, String methodName, Class... paramTypes) {
-        String key = clz.getName() + '.' + methodName
+        String key = clz.getName() + '.' + methodName + '(' + (paramTypes ? paramTypes.collect { ((Class) it).name }.join(',') : '') + ')'
         def maIndexCached = cachedMaIndex[key]
         if (maIndexCached != null && maIndexCached.intValue() == -1) {
             return null
@@ -61,8 +65,8 @@ class BeanReflector {
         }
 
         def maIndex = paramTypes == null ? ma.getIndex(methodName) : ma.getIndex(methodName, paramTypes)
-        cachedMaIndex[key] = maIndex
-        return new BeanReflector(ma, maIndex)
+        def old = cachedMaIndex.putIfAbsent(key, maIndex)
+        return new BeanReflector(ma, old != null ? old : maIndex)
     }
 
     private static Set<String> skipGroovyObjectFields = new HashSet<>()
