@@ -414,7 +414,7 @@ class D {
             args = new ArrayList()
         }
 
-        def beanCl = new ToBeanCl(this)
+        ToBeanCl beanCl = new ToBeanCl(this)
         beanCl.clz = clz
         beanCl.r = r
         beanCl.colFieldMapping = colFieldMapping
