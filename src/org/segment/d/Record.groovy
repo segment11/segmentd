@@ -260,7 +260,7 @@ abstract class Record<V extends Record> implements Serializable {
         where('1=1')
     }
 
-    List<V> loadList(int maxLimitNum = 0) {
+    List<V> list(int maxLimitNum = 0) {
         int maxLimit = maxLimitNum ?: maxQueryNumOnce()
         String fields = fieldsToQuery ?: tableFields()
 
@@ -316,17 +316,17 @@ abstract class Record<V extends Record> implements Serializable {
 
     protected Pager<V> pager
 
-    Pager<V> loadPager() {
-        loadPager(pageNum, pageSize)
+    Pager<V> listPager() {
+        listPager(pageNum, pageSize)
     }
 
-    Pager<V> loadPager(int pageNum, int pageSize = 10) {
+    Pager<V> listPager(int pageNum, int pageSize = 10) {
         assert pageNum > 0 && pageSize > 0
         assert pageSize <= maxQueryNumOnce()
 
         this.pageNum = pageNum
         this.pageSize = pageSize
-        def list = loadList()
+        def list = list()
         if (!list) {
             return new Pager<V>(pageNum, pageSize)
         }
@@ -337,7 +337,7 @@ abstract class Record<V extends Record> implements Serializable {
     }
 
     V one() {
-        def list = loadList(1)
+        def list = list(1)
         list ? list[0] : null
     }
 
