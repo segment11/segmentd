@@ -26,7 +26,7 @@ class DsTest extends Specification {
     }
 
     def 'h2 tcp mode connect with pool and collect stats'() {
-        String[] arr = ["-tcp", "-tcpAllowOthers", "-tcpPort", "8043"]
+        String[] arr = ["-tcp", "-tcpAllowOthers", "-ifNotExists", "-tcpPort", "8043"]
         def server = Server.createTcpServer(arr).start()
         println 'h2 tcp server started'
         def ds = Ds.dbType(Ds.DBType.h2).cacheAs('test_ds').dataSourceInitHandler { DruidDataSource dsInner ->
@@ -63,7 +63,7 @@ class DsTest extends Specification {
             }
         }
         cleanup:
-        metricsServer.stop()
+        metricsServer.close()
         ds.closeConnect()
         server.stop()
         println 'h2 tcp server stopped'
