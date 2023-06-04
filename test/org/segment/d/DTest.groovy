@@ -1,5 +1,6 @@
 package org.segment.d
 
+import org.segment.d.dialect.MySQLDialect
 import org.segment.d.json.JSONFiled
 import spock.lang.Specification
 

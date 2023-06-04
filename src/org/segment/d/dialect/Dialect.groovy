@@ -1,4 +1,4 @@
-package org.segment.d
+package org.segment.d.dialect
 
 import groovy.transform.CompileStatic
 
@@ -10,5 +10,7 @@ interface Dialect {
     String generatePaginationSql(String sql, int start, int limit)
 
     String generateCountSql(String sql)
+
+    boolean isLimitSupport()
 
 }

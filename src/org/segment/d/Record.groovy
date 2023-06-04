@@ -3,6 +3,8 @@ package org.segment.d
 import com.fasterxml.jackson.annotation.JsonIgnore
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.segment.d.dialect.MySQLDialect
+import org.segment.d.dialect.OracleDialect
 
 import java.text.SimpleDateFormat
 
@@ -13,6 +15,7 @@ abstract class Record<V extends Record> implements Serializable {
 
     void setD(D d) {
         this.d = d
+        this
     }
 
     Record<V> withD(D d) {
@@ -20,6 +23,7 @@ abstract class Record<V extends Record> implements Serializable {
         this
     }
 
+    // override this method to use one specific D instance, in case of transaction
     D useD() {
         d
     }
@@ -95,7 +99,7 @@ abstract class Record<V extends Record> implements Serializable {
 
         def props = rawProps(true)
 
-        T t = clz.newInstance()
+        T t = clz.getDeclaredConstructor().newInstance()
         for (field in BeanReflector.getClassFields(clz, Record)) {
             def rawFieldName = field.name
             def name = rawFieldName
@@ -117,6 +121,7 @@ abstract class Record<V extends Record> implements Serializable {
 
     private String tableFieldsCached
 
+    // join with ','
     String tableFields() {
         if (tableFieldsCached == null) {
             tableFieldsCached = rawProps().keySet().collect { D.toUnderline(it) }.join(',')
@@ -136,6 +141,7 @@ abstract class Record<V extends Record> implements Serializable {
         useD().update(rawPropsWithValue(), tbl(), D.toUnderline(pk()))
     }
 
+    // only delete one record, use primary key as where condition
     int delete() {
         String limitSuffix
         def dialect = useD().dialect
@@ -175,19 +181,21 @@ abstract class Record<V extends Record> implements Serializable {
         }
     }
 
+    // not use prepared statement, just use string concat
     String generateSqlWithoutArgs() {
         def props = rawPropsWithValue()
         D.concatStr('insert into ', tbl(), '(', props.keySet().join(','), ') values (',
                 props.values().collect { valueToSqlString(it) }.join(','), ')')
     }
 
+    // you can override this method to limit the number of records to query once
     protected int maxQueryNumOnce() {
         1000
     }
 
     private StringBuilder whereClause = new StringBuilder()
     private List whereArgs = []
-    private String orderByClause = ''
+    private String orderByClause
 
     private String fieldsToQuery
 
@@ -205,7 +213,7 @@ abstract class Record<V extends Record> implements Serializable {
     Record<V> whereReset() {
         whereClause.delete(0, whereClause.length())
         whereArgs.clear()
-        orderByClause = ''
+        orderByClause = null
         this
     }
 
@@ -260,11 +268,13 @@ abstract class Record<V extends Record> implements Serializable {
         where('1=1')
     }
 
+    // if you do not give a limit, it will use maxQueryNumOnce() as the limit, default is 1000
     List<V> list(int maxLimitNum = 0) {
         int maxLimit = maxLimitNum ?: maxQueryNumOnce()
         String fields = fieldsToQuery ?: tableFields()
 
         def queryProps = rawPropsWithValue()
+        // use where clause first, if no where clause, use properties as where clause
         String where = whereClause.length() ? whereClause.toString() : ('and ' +
                 queryProps.collect {
                     D.toUnderline(it.key) + ' = ?'
@@ -282,7 +292,7 @@ abstract class Record<V extends Record> implements Serializable {
             def pager = new Pager<V>(pageNum, pageSize)
             sql = dialect.generatePaginationSql(innerSql, pager.start, pageSize)
         } else {
-            if (dialect instanceof MySQLDialect || dialect instanceof PGDialect) {
+            if (dialect.isLimitSupport()) {
                 sql = "select ${fields} from ${tbl()} where 1 = 1 ${where} ${orderBy} limit ${maxLimit}"
             } else {
                 if (orderBy) {
@@ -292,8 +302,10 @@ abstract class Record<V extends Record> implements Serializable {
                 }
             }
         }
-        log.debug(sql)
-        log.debug(args.toString())
+        if (log.isDebugEnabled()) {
+            log.debug(sql)
+            log.debug(args.toString())
+        }
 
         List<V> list = useD().query(sql, args, this.class as Class<V>)
         if (list && isQueryPagination) {

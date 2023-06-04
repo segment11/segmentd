@@ -1,4 +1,4 @@
-package org.segment.d
+package org.segment.d.dialect
 
 import groovy.transform.CompileStatic
 
@@ -25,5 +25,10 @@ class MySQLDialect implements Dialect {
         sb << sql.trim()
         sb << ') ttt'
         sb.toString()
+    }
+
+    @Override
+    boolean isLimitSupport() {
+        true
     }
 }

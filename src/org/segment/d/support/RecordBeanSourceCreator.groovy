@@ -1,10 +1,13 @@
 package org.segment.d.support
 
+import groovy.transform.CompileStatic
 import org.segment.d.D
 
 import java.sql.ResultSet
 
+@CompileStatic
 class RecordBeanSourceCreator {
+    @CompileStatic
     enum DialectType {
         MySQL, PG, Oracle
     }
@@ -16,7 +19,7 @@ class RecordBeanSourceCreator {
     DialectType dialectType = DialectType.MySQL
 
     Map<String, Class> rowToBean(String table) {
-        def r = [:]
+        Map<String, Class> r = [:]
         String sql = "select * from ${table} limit 1"
         d.db.query(sql) { ResultSet rs ->
             def md = rs.metaData

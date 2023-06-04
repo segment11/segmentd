@@ -35,9 +35,8 @@ class BeanReflector {
     private static ConcurrentHashMap<String, MethodAccess> cachedMa = new ConcurrentHashMap<>()
     private static ConcurrentHashMap<String, Integer> cachedMaIndex = new ConcurrentHashMap<>()
 
-
     static MethodAccess getMaCached(Class clz) {
-        String key = clz.getName()
+        String key = clz.name
         def ma = cachedMa[key]
         if (ma != null) {
             return ma
@@ -53,7 +52,7 @@ class BeanReflector {
     }
 
     static BeanReflector get(Class clz, String methodName, Class... paramTypes) {
-        String key = clz.getName() + '.' + methodName + '(' + (paramTypes ? paramTypes.collect { ((Class) it).name }.join(',') : '') + ')'
+        String key = clz.name + '.' + methodName + '(' + (paramTypes ? paramTypes.collect { ((Class) it).name }.join(',') : '') + ')'
         def maIndexCached = cachedMaIndex[key]
         if (maIndexCached != null && maIndexCached.intValue() == -1) {
             return null
@@ -70,6 +69,8 @@ class BeanReflector {
     }
 
     private static Set<String> skipGroovyObjectFields = new HashSet<>()
+    // different groovy version has different fields
+    // these fields are groovy 2.x
     static {
         skipGroovyObjectFields << '$callSiteArray'
         skipGroovyObjectFields << '$staticClassInfo'
@@ -80,7 +81,7 @@ class BeanReflector {
     private static ConcurrentHashMap<String, List<Field>> fieldsByClassName = new ConcurrentHashMap<>()
 
     static List<Field> getClassFields(Class clz, Class untilUpperClz = null) {
-        String key = clz.getName() + (untilUpperClz ? '_' + untilUpperClz.getName() : '')
+        String key = clz.name + (untilUpperClz ? '_' + untilUpperClz.name : '')
         def list = fieldsByClassName[key]
         if (list != null) {
             return list

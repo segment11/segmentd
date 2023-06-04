@@ -5,6 +5,8 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.commons.beanutils.PropertyUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
+import org.segment.d.dialect.Dialect
+import org.segment.d.dialect.OracleDialect
 import org.segment.d.json.JSONFiled
 import org.segment.d.json.JsonReader
 import org.segment.d.json.JsonWriter
@@ -42,6 +44,7 @@ class D {
     private HashSet<String> skipProperties = new HashSet(skipPropertiesDefault)
 
     private static HashSet<String> skipPropertiesDefault = []
+    // groovy object properties
     static {
         skipPropertiesDefault << 'metaClass'
     }
@@ -157,7 +160,7 @@ class D {
     }
 
     static <T> T map2bean(Map<String, Object> row, Class<T> clz) {
-        T t = clz.newInstance()
+        T t = clz.getDeclaredConstructor().newInstance()
         if (t instanceof Expando) {
             Expando ex = t as Expando
             def props = ex.properties
@@ -216,11 +219,13 @@ class D {
             return null
         }
 
+        def sdf = new SimpleDateFormat(ymdhms)
         def r = new LinkedList()
         for (obj in args) {
+            // groovy.sql.Sql doesn't support java.util.Date
             if (obj instanceof Date) {
                 Date date = obj as Date
-                r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : new SimpleDateFormat(ymdhms).format(date))
+                r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : sdf.format(date))
             } else if (obj instanceof JSONFiled) {
                 r.add(JsonWriter.instance.json(obj))
             } else {
@@ -263,15 +268,19 @@ class D {
         }
 
         if (obj instanceof java.sql.Date) {
+            // default use java.util.Date, change classTypeBySqlType if you want java.sql.Date
             java.sql.Date date = obj as java.sql.Date
             return new Date(date.time)
         } else if (obj instanceof java.sql.Timestamp) {
+            // default use java.util.Date, change classTypeBySqlType if you want java.sql.Timestamp
             java.sql.Timestamp date = obj as java.sql.Timestamp
             return new Date(date.time)
         } else if (obj instanceof BigDecimal) {
+            // default use Double, change classTypeBySqlType if you want BigDecimal
             BigDecimal decimal = obj as BigDecimal
             return decimal.doubleValue()
         } else if (obj instanceof Clob) {
+            // default use String, change classTypeBySqlType if you want Clob
             Clob clob = obj as Clob
             return toCharString(clob.characterStream)
         } else if (obj instanceof Byte) {
@@ -289,8 +298,10 @@ class D {
         }
     }
 
+    static int charBufferSize = 8 * 1024
+
     private String toCharString(Reader reader) {
-        char[] arr = new char[8 * 1024]
+        char[] arr = new char[charBufferSize]
         def buffer = new StringBuilder()
         int numCharsRead
         while ((numCharsRead = reader.read(arr, 0, arr.length)) != -1) {
@@ -327,9 +338,12 @@ class D {
             ResultSet rs = (ResultSet) obj
             def md = rs.metaData
 
+            // column index to column name
             Map<Integer, String> cols = [:]
+            // column index to column type
             Map<Integer, Integer> colsType = [:]
 
+            // result set column index start from 1
             md.columnCount.times { int i ->
                 int j = i + 1
                 cols.put(j, md.getColumnName(j))
@@ -343,6 +357,7 @@ class D {
         }
 
         private T rsToBean(ResultSet rs, Map<Integer, String> cols, Map<Integer, Integer> colsType, Class<T> clz) {
+            // only return one column if return type is base type
             boolean isBaseType = clz.package.name == 'java.lang' || clz.name == 'java.util.Date'
             if (isBaseType) {
                 def obj = d.resultSetValueClassTypeTransfer(rs.getObject(1))
@@ -352,7 +367,9 @@ class D {
                 return DefaultGroovyMethods.asType(obj, clz)
             }
 
-            T t = clz.newInstance()
+            // no parameter constructor
+            T t = clz.getDeclaredConstructor().newInstance()
+            // class type support Expando, Record, Map
             boolean isEx = t instanceof Expando
             boolean isRecord = t instanceof Record
             boolean isMap = t instanceof HashMap
@@ -408,6 +425,7 @@ class D {
         }
     }
 
+    // clz support java.lang.*, java.util.Date, Expando, Record, Map
     public <T> List<T> query(String sql, List args, Class<T> clz, Map<String, String> colFieldMapping = null) {
         List<T> r = new ArrayList()
         if (args == null) {
@@ -513,39 +531,6 @@ class D {
             update(map2, table, pkCol, false)
         } else {
             update(map, table, pkCol, false)
-        }
-    }
-
-    private static String addMergeFieldPrefix(String prefix, String field) {
-        if (!prefix) {
-            return field
-        }
-        prefix + field[0].toUpperCase() + field[1..-1]
-    }
-
-    static void mergeFields(List<Record> list, List<Record> mergedList, String field, String matchField, String prefix,
-                            String... mergedFields) {
-        mergedList.each { m ->
-            list.findAll {
-                it.getProperty(field) == m.getProperty(matchField)
-            }.each {
-                for (f in mergedFields) {
-                    it.prop(addMergeFieldPrefix(prefix, f), m.getProperty(f))
-                }
-            }
-        }
-    }
-
-    static void mergeFieldsToMap(List<Map> list, List<Record> mergedList, String field, String matchField, String prefix,
-                                 String... mergedFields) {
-        mergedList.each { m ->
-            list.findAll {
-                it[field] == m.getProperty(matchField)
-            }.each {
-                for (f in mergedFields) {
-                    it.put(addMergeFieldPrefix(prefix, f), m.getProperty(f))
-                }
-            }
         }
     }
 }

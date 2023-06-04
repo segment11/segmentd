@@ -63,7 +63,9 @@ class Ds {
     private String user
     private String password
     private DruidDataSource dataSource
+    // you can set dataSourceInitHandler to init dataSource
     private DruidDataSourceInitHandler dataSourceInitHandler
+    // default druid stats filter use mergeStat
     private String druidDataSourceFilters = 'mergeStat'
     private Map<String, Object> urlParams = [:]
 
@@ -107,6 +109,7 @@ class Ds {
 
     private static Map<String, DBTypeInfo> dbTypeOthers = [:]
 
+    // you can register your dbType
     static void register(String name, String driver, DBJdbcUrlGenerator generator) {
         assert name && driver && generator
         dbTypeOthers[name] = new DBTypeInfo(driver: driver, generator: generator)
@@ -115,6 +118,7 @@ class Ds {
     static Ds dbType(DBType dbType) {
         def ds = new Ds(dbType: dbType)
         if (dbType == DBType.mysql) {
+            // mysql default useUnicode=true&characterEncoding=utf-8
             ds.urlParam('useSSL', false)
             ds.urlParam('useUnicode', true)
             ds.urlParam('characterEncoding', ENCODING)
@@ -123,6 +127,7 @@ class Ds {
         ds
     }
 
+    // user customized dbType use this method
     static Ds dbType(String dbTypeOtherName) {
         new Ds(dbTypeOtherName: dbTypeOtherName)
     }
@@ -180,6 +185,7 @@ class Ds {
             return myNameCached
         }
 
+        // no parameters in jdbcUrl
         String urlSimple = jdbcUrl.contains('?') ? jdbcUrl[0..<jdbcUrl.indexOf('?')] : jdbcUrl
         myNameCached = (user ?: 'anon') + '_' + urlSimple.replaceAll(/[:|=|\/|\.]/, '_')
         myNameCached
@@ -187,12 +193,13 @@ class Ds {
 
     volatile boolean isConnected = false
 
+    // use groovy.sql.Sql
     synchronized Ds connect(String ip, int port, String db, String user, String password) {
         assert !dataSource
         assert dbType || dbTypeOtherName
 
         this.jdbcUrl = generateJdbcUrl(ip, port, db)
-        log.info jdbcUrl
+        log.info 'ready to connect: ' + jdbcUrl
         this.user = user
         this.password = password
 
@@ -201,6 +208,7 @@ class Ds {
         this
     }
 
+    // use druid datasource
     synchronized Ds connectWithPool(String ip, int port, String db, String user, String password, int minPoolSize = 5, int maxPoolSize = 10) {
         assert !dataSource
         assert dbType || dbTypeOtherName
@@ -222,17 +230,18 @@ class Ds {
         dataSource.maxWait = 1000 * 30
         dataSource.testWhileIdle = true
         dataSource.testOnBorrow = true
-        dataSource.validationQuery = 'select 1'
+        dataSource.validationQuery = 'select 1 from dual'
         dataSource.maxPoolPreparedStatementPerConnectionSize = 5
         dataSource.timeBetweenEvictionRunsMillis = 1000 * 60
         if (druidDataSourceFilters) {
             dataSource.filters = druidDataSourceFilters
         }
+        // overwrite druid datasource config
         if (dataSourceInitHandler) {
             dataSourceInitHandler.set(dataSource)
         }
         dataSource.init()
-        log.info 'done create druid data source {}', myName()
+        log.info 'done create druid datasource {}', myName()
 
         this.sql = new Sql(dataSource)
         this.isConnected = true
@@ -263,7 +272,7 @@ class Ds {
         }
         if (dataSource) {
             dataSource.close()
-            log.info 'close druid data source - {}', myName()
+            log.info 'close druid datasource - {}', myName()
         }
         isConnected = false
     }
@@ -274,12 +283,14 @@ class Ds {
         metricGaugeCollector.sqlHashHolder
     }
 
+    // add some prometheus label value
     Ds extendLabelValue(String label, String labelValue) {
         metricGaugeCollector.labels.add(label)
         metricGaugeCollector.labelValues.add(labelValue)
         this
     }
 
+    // for prometheus, add default label ds_name
     Ds export(CollectorRegistry registry = CollectorRegistry.defaultRegistry) {
         metricGaugeCollector.labels.add('ds_name')
         metricGaugeCollector.labelValues.add(myName())
@@ -309,6 +320,7 @@ class Ds {
         metricGaugeCollector.sqlList.findAll { it.sql.toUpperCase().contains(keyword.toUpperCase()) }
     }
 
+    // add other sql stat property of JdbcSqlStatValue, default refer MetricGaugeCollector static block
     Ds addSqlStatCollectProperty(String... property) {
         def props = new JdbcSqlStatValue().properties.keySet().collect { it.toString() }
         for (one in property) {

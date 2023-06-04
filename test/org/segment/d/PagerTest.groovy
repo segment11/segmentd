@@ -16,4 +16,17 @@ class PagerTest extends Specification {
         pager.hasNext()
         pager.hasPre()
     }
+
+    def 'pager transfer'() {
+        given:
+        def pager = new Pager(1, 10)
+        pager.totalCount = 3
+        pager.list = [1, 2, 3]
+        println pager
+        def pager2 = pager.transfer { int i -> i.toString() }
+        expect:
+        pager.totalCount == pager2.totalCount
+        pager.list.size() == pager2.list.size()
+        pager2.list == ['1', '2', '3']
+    }
 }

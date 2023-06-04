@@ -8,7 +8,7 @@ class BeanReflectorTest extends Specification {
         String hi()
     }
 
-    private static class T1Impl implements T1 {
+    static class T1Impl implements T1 {
         String name
 
         @Override

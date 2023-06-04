@@ -1,10 +1,11 @@
 package org.segment.d
 
+import org.segment.d.dialect.MySQLDialect
 import spock.lang.Specification
 
 class RecordTest extends Specification {
 
-    private static class UserDTO extends Record<UserDTO> {
+    static class UserDTO extends Record<UserDTO> {
         Integer id
         String name
 
@@ -14,7 +15,7 @@ class RecordTest extends Specification {
         }
     }
 
-    private static class StudentBaseInfoDTO extends Record<StudentBaseInfoDTO> {
+    static class StudentBaseInfoDTO extends Record<StudentBaseInfoDTO> {
         Integer id
         String studentName
         Integer age

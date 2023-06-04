@@ -31,6 +31,7 @@ class MetricGaugeCollector extends Collector {
 
     private static Set<String> sqlStatCollectPropertySetDefault = []
 
+    // default only collect these properties for each sql
     static {
         '''
         def one = new JdbcSqlStatValue()
@@ -92,6 +93,10 @@ class MetricGaugeCollector extends Collector {
 
         sortedSqlStatList.each { sqlStatValue ->
             if (sqlHashHolder.size() >= maxStatSqlSize) {
+                if (log.isDebugEnabled()) {
+                    log.debug('sqlHashHolder size is {}, maxStatSqlSize is {}, skip collect sql stat',
+                            sqlHashHolder.size(), maxStatSqlSize)
+                }
                 return
             }
             def sqlHash = Math.abs(sqlStatValue.sqlHash)
@@ -116,6 +121,13 @@ class MetricGaugeCollector extends Collector {
                     val = (propertyVal as Number).doubleValue()
                 }
                 sqlGauges[namePre + D.toUnderline(k.toString())] = val
+            }
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug('sqlHashHolder: {}', sqlHashHolder)
+            sqlGauges.each { k, v ->
+                log.debug('sqlGauges: {}, {}', k, v)
             }
         }
     }

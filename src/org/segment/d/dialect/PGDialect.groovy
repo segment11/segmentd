@@ -1,18 +1,18 @@
-package org.segment.d
+package org.segment.d.dialect
 
 import groovy.transform.CompileStatic
 
 @CompileStatic
-class OracleDialect extends MySQLDialect {
+class PGDialect extends MySQLDialect {
     @Override
     String generatePaginationSql(String sql, int start, int limit) {
         def sb = new StringBuilder()
         sb << 'select ttt.* from ('
         sb << sql.trim()
-        sb << ') ttt where rownum > '
+        sb << ') ttt limit '
+        sb << limit
+        sb << ' offset '
         sb << start
-        sb << ' and rownum <= '
-        sb << (start + limit)
         sb.toString()
     }
 }
