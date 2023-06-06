@@ -74,6 +74,14 @@ age int
             student.id = it + 1
             student.add()
         }
+
+        student.id = 11
+        student.add()
+        student.age = 36
+        student.update()
+        student.delete()
+        new StudentBaseInfoDTO(id: 11).withD(d).deleteAll()
+
         def x = new StudentBaseInfoDTO(id: 1, d: d).
                 queryFields('studentName').queryFieldsExclude('id').one()
         int givenId = 2

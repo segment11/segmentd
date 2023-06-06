@@ -1,5 +1,7 @@
 package org.segment.d
 
+import groovy.sql.Sql
+import org.h2.jdbcx.JdbcDataSource
 import org.segment.d.dialect.MySQLDialect
 import org.segment.d.json.JSONFiled
 import spock.lang.Specification
@@ -31,20 +33,42 @@ class DTest extends Specification {
         }
     }
 
+    def 'base'() {
+        given:
+        def d1 = new D(Sql.newInstance('jdbc:h2:mem:test1'), new MySQLDialect())
+        def ds = new JdbcDataSource()
+        ds.url = 'jdbc:h2:mem:test1'
+        def d2 = new D(ds, new MySQLDialect())
+        d1.addReturnPk(true).addSkipProperties('metaClass')
+        expect:
+        d1.db != null
+        d1.dialect.isLimitSupport()
+        d1.one('select 1 as a') == [a: 1]
+        d2.one('select 1 as a') == [a: 1]
+        cleanup:
+        d1.close()
+    }
+
     def 'underline to camel'() {
         expect:
+        D.toCamel(null) == null
         D.toCamel('student_name') == 'studentName'
         D.toCamel('student_name', false) == 'StudentName'
     }
 
     def 'camel to underline'() {
         expect:
+        D.toUnderline((String) null) == null
         D.toUnderline('studentName') == 'student_name'
         D.toUnderline(['studentName': 1]) == ['student_name': 1]
     }
 
     def 'bean to map'() {
+        given:
+        def ex = new Expando()
+        ex.setProperty('id', 1)
         expect:
+        D.bean2map(ex) == [id: 1]
         D.bean2map(new User(id: 1, name: 'kerry')) == [id: 1, name: 'kerry']
         D.bean2map(new User(id: 1, name: 'kerry'), ['name'] as Set) == [id: 1]
     }
@@ -52,8 +76,10 @@ class DTest extends Specification {
     def 'map to bean'() {
         given:
         User user = D.map2bean([id: 1, name: 'kerry'], User)
+        Expando ex = D.map2bean([id: 1], Expando)
         expect:
         user.name == 'kerry'
+        ex.getProperty('id') == 1
     }
 
     def 'ddl execute'() {

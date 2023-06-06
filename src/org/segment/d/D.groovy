@@ -7,7 +7,9 @@ import org.apache.commons.beanutils.PropertyUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 import org.segment.d.dialect.Dialect
 import org.segment.d.dialect.OracleDialect
-import org.segment.d.json.*
+import org.segment.d.json.DefaultJsonTransformer
+import org.segment.d.json.JSONFiled
+import org.segment.d.json.JsonTransformer
 
 import javax.sql.DataSource
 import java.lang.reflect.Array
@@ -37,8 +39,9 @@ class D {
 
     private boolean addReturnPk = true
 
-    void addReturnPk(boolean addReturnPk) {
+    D addReturnPk(boolean addReturnPk) {
         this.addReturnPk = addReturnPk
+        this
     }
 
     private HashSet<String> skipProperties = new HashSet(skipPropertiesDefault)
@@ -49,10 +52,11 @@ class D {
         skipPropertiesDefault << 'metaClass'
     }
 
-    void addSkipProperties(String... properties) {
+    D addSkipProperties(String... properties) {
         for (property in properties) {
             skipProperties << property
         }
+        this
     }
 
     D(Sql db, Dialect dialect) {
