@@ -83,7 +83,7 @@ publishing {
 
             pom {
                 name = 'segmentd'
-                description = 'A macro groovy web framework inspired by sparkjava.'
+                description = 'A ActiveRecord style RMDB database access library For Groovy developers.'
                 url = 'https://github.com/segment11/segmentd'
                 licenses {
                     license {
@@ -104,7 +104,7 @@ publishing {
     repositories {
         maven {
             name = 'ossrh'
-            url = version.endsWith('SNAPSHOT') ? ossSnapshotUrl : ossReleaseUrl
+            url = version.toString().endsWith('SNAPSHOT') ? ossSnapshotUrl : ossReleaseUrl
             credentials {
                 username = System.getProperty('ossrh.username')
                 password = System.getProperty('ossrh.password')

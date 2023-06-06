@@ -1,5 +1,5 @@
 # segmentd
-ActiveRecord Style RMDB Database Access Library For Groovy Developers.
+A ActiveRecord style RMDB database access library For Groovy developers.
 
 ## Main Classes
 
@@ -13,11 +13,12 @@ ActiveRecord Style RMDB Database Access Library For Groovy Developers.
 ```groovy
 package org.segment.d
 
+import org.segment.d.dialect.MySQLDialect
 import spock.lang.Specification
 
 class RecordTest extends Specification {
 
-    private static class UserDTO extends Record<UserDTO> {
+    static class UserDTO extends Record<UserDTO> {
         Integer id
         String name
 
@@ -27,7 +28,7 @@ class RecordTest extends Specification {
         }
     }
 
-    private static class StudentBaseInfoDTO extends Record<StudentBaseInfoDTO> {
+    static class StudentBaseInfoDTO extends Record<StudentBaseInfoDTO> {
         Integer id
         String studentName
         Integer age
@@ -86,6 +87,14 @@ age int
             student.id = it + 1
             student.add()
         }
+
+        student.id = 11
+        student.add()
+        student.age = 36
+        student.update()
+        student.delete()
+        new StudentBaseInfoDTO(id: 11).withD(d).deleteAll()
+
         def x = new StudentBaseInfoDTO(id: 1, d: d).
                 queryFields('studentName').queryFieldsExclude('id').one()
         int givenId = 2
@@ -93,10 +102,10 @@ age int
         def z = new StudentBaseInfoDTO(id: 3, d: d)
         z.load()
         def queryList = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
-                whereNotIn('id', [3], false).loadList()
+                whereNotIn('id', [3], false).list()
         def queryList2 = new StudentBaseInfoDTO(d: d).whereIn('id', [3, 4, 5], false).
-                whereReset().where('id>?', 6).orderBy('id desc').loadList(2)
-        def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').loadPager()
+                whereReset().where('id>?', 6).orderBy('id desc').list(2)
+        def pager = new StudentBaseInfoDTO(d: d, pageNum: 1, pageSize: 2).where('id>4').listPager()
         expect:
         x.studentName == 'kerry'
         y.id == 2
@@ -111,5 +120,37 @@ age int
         cleanup:
         ds.closeConnect()
     }
+
+    def 'transaction support'() {
+        given:
+        def ds = Ds.h2mem('test')
+        def d = new D(ds, new MySQLDialect())
+        d.exe('''
+create table student_base_info(
+id int,
+student_name varchar(50),
+age int
+)
+''')
+        def student = new StudentBaseInfoDTO(id: 1, studentName: 'kerry', age: 32)
+        student.d = d
+
+        ds.sql.withTransaction {
+            10.times {
+                student.id = it + 1
+                student.add()
+            }
+        }
+
+        def totalCount = new StudentBaseInfoDTO().withD(d).
+                queryFields('id').noWhere().list().size()
+
+        expect:
+        totalCount == 10
+
+        cleanup:
+        ds.closeConnect()
+    }
 }
+
 ```
