@@ -7,9 +7,7 @@ import org.apache.commons.beanutils.PropertyUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 import org.segment.d.dialect.Dialect
 import org.segment.d.dialect.OracleDialect
-import org.segment.d.json.JSONFiled
-import org.segment.d.json.JsonReader
-import org.segment.d.json.JsonWriter
+import org.segment.d.json.*
 
 import javax.sql.DataSource
 import java.lang.reflect.Array
@@ -30,6 +28,8 @@ class D {
     }
 
     private Dialect dialect
+
+    JsonTransformer jsonTransformer = new DefaultJsonTransformer()
 
     Dialect getDialect() {
         return dialect
@@ -227,7 +227,7 @@ class D {
                 Date date = obj as Date
                 r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : sdf.format(date))
             } else if (obj instanceof JSONFiled) {
-                r.add(JsonWriter.instance.json(obj))
+                r.add(jsonTransformer.json(obj))
             } else {
                 r.add(obj)
             }
@@ -402,7 +402,7 @@ class D {
                         def methodGet = BeanReflector.get(clz, methodGetName)
                         if (methodGet.returnType.interfaces.any { it == JSONFiled }) {
                             fieldType = methodGet.returnType
-                            obj = JsonReader.instance.read(obj.toString(), fieldType)
+                            obj = d.jsonTransformer.read(obj.toString(), fieldType)
                         }
                     }
 
