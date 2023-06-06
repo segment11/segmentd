@@ -14,11 +14,11 @@ class RecordBeanSourceCreator {
 
     D d
 
-    String srcDirPath = '../src'
+    String srcDirPath = './src'
 
     DialectType dialectType = DialectType.MySQL
 
-    Map<String, Class> rowToBean(String table) {
+    private Map<String, Class> rowToBean(String table) {
         Map<String, Class> r = [:]
         String sql = "select * from ${table} limit 1"
         d.db.query(sql) { ResultSet rs ->
@@ -56,7 +56,7 @@ package ${pkg}
 
 import org.segment.d.D
 import org.segment.d.Ds
-import org.segment.d.${dialectType.name()}Dialect
+import org.segment.d.dialect.${dialectType.name()}Dialect
 import org.segment.d.Record
 import groovy.transform.CompileStatic
 ${imports.trim()}
