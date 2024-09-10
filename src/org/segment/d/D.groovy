@@ -297,6 +297,12 @@ class D {
             if (type != Short) {
                 return DefaultGroovyMethods.asType(obj, type)
             }
+        } else if (obj instanceof BigInteger) {
+            def type = classTypeBySqlType[Types.BIGINT]
+            if (type != BigInteger) {
+                return ((BigInteger) obj).longValue();
+//                return DefaultGroovyMethods.asType(obj, type)
+            }
         } else {
             return obj
         }
