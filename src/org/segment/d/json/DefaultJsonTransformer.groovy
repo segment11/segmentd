@@ -1,6 +1,7 @@
 package org.segment.d.json
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import groovy.transform.CompileStatic
@@ -17,6 +18,8 @@ class DefaultJsonTransformer implements JsonTransformer {
 
     @Override
     <T> T read(String string, Class<T> clz) {
-        new ObjectMapper().readValue(string, clz)
+        def mapper = new ObjectMapper()
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        mapper.readValue(string, clz)
     }
 }
