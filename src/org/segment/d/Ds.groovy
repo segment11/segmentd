@@ -230,7 +230,6 @@ class Ds {
         dataSource.maxWait = 1000 * 30
         dataSource.testWhileIdle = true
         dataSource.testOnBorrow = true
-        dataSource.validationQuery = 'select 1 from dual'
         dataSource.maxPoolPreparedStatementPerConnectionSize = 5
         dataSource.timeBetweenEvictionRunsMillis = 1000 * 60
         if (druidDataSourceFilters) {
