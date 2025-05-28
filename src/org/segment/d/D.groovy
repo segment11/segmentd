@@ -134,7 +134,7 @@ class D {
     static Map<String, Object> toUnderline(Map<String, Object> map) {
         def r = new HashMap<String, Object>()
         map.each { k, v ->
-            r[D.toUnderline(k)] = v
+            r[toUnderline(k)] = v
         }
         r
     }
@@ -170,14 +170,14 @@ class D {
             def props = ex.properties
             row.each { k, v ->
                 props[k] = v
-                props[D.toUnderline(k)] = v
+                props[toUnderline(k)] = v
             }
         }
 
         for (field in clz.getDeclaredFields()) {
             String name = field.name
             if (PropertyUtils.isWriteable(t, name)) {
-                String key = D.toUnderline(name)
+                String key = toUnderline(name)
                 if (!row.containsKey(key)) {
                     continue
                 }
@@ -216,14 +216,14 @@ class D {
         sb.toString()
     }
 
-    final static String ymdhms = 'yyyy-MM-dd HH:mm:ss'
+    final static String DATE_FORMAT_STR = 'yyyy-MM-dd HH:mm:ss'
 
     protected List transferArgs(List args) {
         if (args == null) {
             return null
         }
 
-        def sdf = new SimpleDateFormat(ymdhms)
+        def sdf = new SimpleDateFormat(DATE_FORMAT_STR)
         def r = new LinkedList()
         for (obj in args) {
             // groovy.sql.Sql doesn't support java.util.Date
@@ -266,7 +266,7 @@ class D {
         classTypeBySqlType[type] ?: String
     }
 
-    protected Object resultSetValueClassTypeTransfer(Object obj) {
+    protected static Object resultSetValueClassTypeTransfer(Object obj) {
         if (obj == null) {
             return null
         }
@@ -275,9 +275,9 @@ class D {
             // default use java.util.Date, change classTypeBySqlType if you want java.sql.Date
             java.sql.Date date = obj as java.sql.Date
             return new Date(date.time)
-        } else if (obj instanceof java.sql.Timestamp) {
+        } else if (obj instanceof Timestamp) {
             // default use java.util.Date, change classTypeBySqlType if you want java.sql.Timestamp
-            java.sql.Timestamp date = obj as java.sql.Timestamp
+            Timestamp date = obj as Timestamp
             return new Date(date.time)
         } else if (obj instanceof BigDecimal) {
             // default use Double, change classTypeBySqlType if you want BigDecimal
@@ -291,17 +291,23 @@ class D {
             def type = classTypeBySqlType[Types.TINYINT]
             if (type != Byte) {
                 return DefaultGroovyMethods.asType(obj, type)
+            } else {
+                return null
             }
         } else if (obj instanceof Short) {
             def type = classTypeBySqlType[Types.SMALLINT]
             if (type != Short) {
                 return DefaultGroovyMethods.asType(obj, type)
+            } else {
+                return null
             }
         } else if (obj instanceof BigInteger) {
             def type = classTypeBySqlType[Types.BIGINT]
             if (type != BigInteger) {
-                return ((BigInteger) obj).longValue();
+                return ((BigInteger) obj).longValue()
 //                return DefaultGroovyMethods.asType(obj, type)
+            } else {
+                return null
             }
         } else {
             return obj
@@ -310,7 +316,7 @@ class D {
 
     static int charBufferSize = 8 * 1024
 
-    private String toCharString(Reader reader) {
+    private static String toCharString(Reader reader) {
         char[] arr = new char[charBufferSize]
         def buffer = new StringBuilder()
         int numCharsRead
@@ -370,7 +376,7 @@ class D {
             // only return one column if return type is base type
             boolean isBaseType = clz.package.name == 'java.lang' || clz.name == 'java.util.Date'
             if (isBaseType) {
-                def obj = d.resultSetValueClassTypeTransfer(rs.getObject(1))
+                def obj = resultSetValueClassTypeTransfer(rs.getObject(1))
                 if (obj == null) {
                     return null
                 }
@@ -386,7 +392,7 @@ class D {
 
             for (int i = 1; i <= cols.size(); i++) {
                 String label = cols.get(i)
-                def obj = d.resultSetValueClassTypeTransfer(rs.getObject(i))
+                def obj = resultSetValueClassTypeTransfer(rs.getObject(i))
                 if (obj == null) {
                     continue
                 }
@@ -405,7 +411,7 @@ class D {
                         finalLabel = label
                     }
 
-                    def fieldType = d.getClassTypeBySqlType(colsType.get(i))
+                    def fieldType = getClassTypeBySqlType(colsType.get(i))
                     // check if is a json field
                     if (fieldType == String) {
                         String methodGetName = 'get' + toCamel(finalLabel, false)
@@ -436,7 +442,7 @@ class D {
     }
 
     // clz support java.lang.*, java.util.Date, Expando, Record, Map
-    public <T> List<T> query(String sql, List args, Class<T> clz, Map<String, String> colFieldMapping = null) {
+    <T> List<T> query(String sql, List args, Class<T> clz, Map<String, String> colFieldMapping = null) {
         List<T> r = new ArrayList()
         if (args == null) {
             args = new ArrayList()
@@ -450,8 +456,8 @@ class D {
         r
     }
 
-    public <T> Pager<T> pagination(String sql, List args, Class<T> clz, int pageNum, int pageSize,
-                                   Map<String, String> colFieldMapping = null) {
+    <T> Pager<T> pagination(String sql, List args, Class<T> clz, int pageNum, int pageSize,
+                            Map<String, String> colFieldMapping = null) {
         def pager = new Pager(pageNum, pageSize)
 
         String paginationSql = dialect.generatePaginationSql(sql, pager.start, pageSize)
@@ -465,16 +471,16 @@ class D {
         pager
     }
 
-    public <T> List<T> query(String sql, Class<T> clz) {
+    <T> List<T> query(String sql, Class<T> clz) {
         query(sql, null, clz)
     }
 
-    public <T> T one(String sql, List args, Class<T> clz, Map<String, String> colFieldMapping = null) {
+    <T> T one(String sql, List args, Class<T> clz, Map<String, String> colFieldMapping = null) {
         def r = query(sql, args, clz, colFieldMapping)
         r ? r[0] : null
     }
 
-    public <T> T one(String sql, Class<T> clz, Map<String, String> colFieldMapping = null) {
+    <T> T one(String sql, Class<T> clz, Map<String, String> colFieldMapping = null) {
         def r = query(sql, null, clz, colFieldMapping)
         r ? r[0] : null
     }

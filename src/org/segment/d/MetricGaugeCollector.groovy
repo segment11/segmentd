@@ -142,7 +142,7 @@ class MetricGaugeCollector extends Collector {
         gauges.each { k, v ->
             dsSamples.add(new MetricFamilySamples.Sample(k, labels, labelValues, v))
         }
-        def dsMfs = new MetricFamilySamples('druid_ds_stats', Collector.Type.COUNTER,
+        def dsMfs = new MetricFamilySamples('druid_ds_stats', Type.COUNTER,
                 'Druid dataSource stats.', dsSamples)
         list.add(dsMfs)
 
@@ -157,7 +157,7 @@ class MetricGaugeCollector extends Collector {
             sqlSetLabelValues.add(sqlHash.toString())
             sqlSamples.add(new MetricFamilySamples.Sample(key, sqlSetLabel, sqlSetLabelValues, v))
         }
-        def sqlMfs = new MetricFamilySamples('druid_sql_stats', Collector.Type.COUNTER,
+        def sqlMfs = new MetricFamilySamples('druid_sql_stats', Type.COUNTER,
                 'Druid dataSource each sql execute stats.', sqlSamples)
         list.add(sqlMfs)
 

@@ -92,7 +92,7 @@ abstract class Record<V extends Record> implements Serializable {
         r
     }
 
-    public <T> T asType(Class<T> clz, Map<String, String> fieldMapping = null) {
+    <T> T asType(Class<T> clz, Map<String, String> fieldMapping = null) {
         if (clz == this.class) {
             return (T) this
         }
@@ -170,10 +170,10 @@ abstract class Record<V extends Record> implements Serializable {
         useD().exeUpdate(sql, args)
     }
 
-    protected String valueToSqlString(Object obj) {
+    protected static String valueToSqlString(Object obj) {
         if (obj instanceof Date) {
             def date = obj as Date
-            return "to_date('${new SimpleDateFormat(D.ymdhms).format(date)}', 'yyyy-MM-dd hh24:mi:ss')"
+            return "to_date('${new SimpleDateFormat(D.DATE_FORMAT_STR).format(date)}', 'yyyy-MM-dd hh24:mi:ss')"
         } else if (obj instanceof String) {
             return "'${obj}'"
         } else {

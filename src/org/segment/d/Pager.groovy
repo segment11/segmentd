@@ -15,7 +15,7 @@ class Pager<T> {
     }
 
     // transfer to another type
-    public <V> Pager<V> transfer(Closure<V> closure) {
+    <V> Pager<V> transfer(Closure<V> closure) {
         def pager = new Pager(this.pageNum, this.pageSize)
         pager.totalCount = this.totalCount
         if (this.list) {
