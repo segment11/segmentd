@@ -36,7 +36,7 @@ class BeanReflector {
     private static ConcurrentHashMap<String, Integer> cachedMaIndex = new ConcurrentHashMap<>()
 
     static MethodAccess getMaCached(Class clz) {
-        String key = clz.name
+        def key = clz.name
         def ma = cachedMa[key]
         if (ma != null) {
             return ma
@@ -52,7 +52,7 @@ class BeanReflector {
     }
 
     static BeanReflector get(Class clz, String methodName, Class... paramTypes) {
-        String key = clz.name + '.' + methodName + '(' + (paramTypes ? paramTypes.collect { ((Class) it).name }.join(',') : '') + ')'
+        def key = clz.name + '.' + methodName + '(' + (paramTypes ? paramTypes.collect { ((Class) it).name }.join(',') : '') + ')'
         def maIndexCached = cachedMaIndex[key]
         if (maIndexCached != null && maIndexCached.intValue() == -1) {
             return null
@@ -81,7 +81,7 @@ class BeanReflector {
     private static ConcurrentHashMap<String, List<Field>> fieldsByClassName = new ConcurrentHashMap<>()
 
     static List<Field> getClassFields(Class clz, Class untilUpperClz = null) {
-        String key = clz.name + (untilUpperClz ? '_' + untilUpperClz.name : '')
+        def key = clz.name + (untilUpperClz ? '_' + untilUpperClz.name : '')
         def list = fieldsByClassName[key]
         if (list != null) {
             return list
@@ -89,7 +89,7 @@ class BeanReflector {
 
         List<Field> r = []
 
-        Class tmp = clz
+        def tmp = clz
         while (tmp != null) {
             def fields = tmp.getDeclaredFields()
             for (field in fields) {

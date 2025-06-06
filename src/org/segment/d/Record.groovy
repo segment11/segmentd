@@ -82,7 +82,7 @@ abstract class Record<V extends Record> implements Serializable {
         Map<String, Object> r = [:]
         for (field in BeanReflector.getClassFields(this.class, Record)) {
             def name = field.name
-            String methodName = 'get' + name[0].toUpperCase() + name[1..-1]
+            def methodName = 'get' + name[0].toUpperCase() + name[1..-1]
             def reflector = BeanReflector.get(this.class, methodName)
             r[name] = reflector.invoke(this)
         }
@@ -111,7 +111,7 @@ abstract class Record<V extends Record> implements Serializable {
             }
             def value = props[name]
             if (value != null) {
-                String methodName = 'set' + rawFieldName[0].toUpperCase() + rawFieldName[1..-1]
+                def methodName = 'set' + rawFieldName[0].toUpperCase() + rawFieldName[1..-1]
                 def reflector = BeanReflector.get(t.class, methodName, field.type)
                 reflector.invoke(t, value)
             }
@@ -159,7 +159,7 @@ abstract class Record<V extends Record> implements Serializable {
 
     int deleteAll() {
         def queryProps = rawPropsWithValue()
-        String where = whereClause.length() ? whereClause.toString() : ('and ' +
+        def where = whereClause.length() ? whereClause.toString() : ('and ' +
                 queryProps.collect {
                     D.toUnderline(it.key) + ' = ?'
                 }.join(' and '))
@@ -205,7 +205,7 @@ abstract class Record<V extends Record> implements Serializable {
     }
 
     Record<V> queryFieldsExclude(String fieldsToQueryExclude) {
-        String exclude = D.toUnderline(fieldsToQueryExclude)
+        def exclude = D.toUnderline(fieldsToQueryExclude)
         this.fieldsToQuery = (tableFields().split(',') - exclude.split(',')).join(',')
         this
     }
@@ -243,7 +243,7 @@ abstract class Record<V extends Record> implements Serializable {
     }
 
     Record<V> whereIn(String field, List list, boolean withQuote = true) {
-        String wrapString = list.collect {
+        def wrapString = list.collect {
             if (withQuote) {
                 return "'" + it + "'"
             } else {
@@ -254,7 +254,7 @@ abstract class Record<V extends Record> implements Serializable {
     }
 
     Record<V> whereNotIn(String field, List list, boolean withQuote = true) {
-        String wrapString = list.collect {
+        def wrapString = list.collect {
             if (withQuote) {
                 return "'" + it + "'"
             } else {
@@ -271,11 +271,11 @@ abstract class Record<V extends Record> implements Serializable {
     // if you do not give a limit, it will use maxQueryNumOnce() as the limit, default is 1000
     List<V> list(int maxLimitNum = 0) {
         int maxLimit = maxLimitNum ?: maxQueryNumOnce()
-        String fields = fieldsToQuery ?: tableFields()
+        def fields = fieldsToQuery ?: tableFields()
 
         def queryProps = rawPropsWithValue()
         // use where clause first, if no where clause, use properties as where clause
-        String where = whereClause.length() ? whereClause.toString() : ('and ' +
+        def where = whereClause.length() ? whereClause.toString() : ('and ' +
                 queryProps.collect {
                     D.toUnderline(it.key) + ' = ?'
                 }.join(' and '))
@@ -286,9 +286,9 @@ abstract class Record<V extends Record> implements Serializable {
         String sql
         boolean isQueryPagination = pageNum != 0
 
-        String orderBy = orderByClause ? 'order by ' + orderByClause : ''
+        def orderBy = orderByClause ? 'order by ' + orderByClause : ''
         if (isQueryPagination) {
-            String innerSql = "select ${fields} from ${tbl()} where 1 = 1 ${where} ${orderBy}"
+            def innerSql = "select ${fields} from ${tbl()} where 1 = 1 ${where} ${orderBy}".toString()
             def pager = new Pager<V>(pageNum, pageSize)
             sql = dialect.generatePaginationSql(innerSql, pager.start, pageSize)
         } else {
@@ -310,8 +310,8 @@ abstract class Record<V extends Record> implements Serializable {
         List<V> list = useD().query(sql, args, this.class as Class<V>)
         if (list && isQueryPagination) {
             def pager = new Pager<V>(pageNum, pageSize)
-            String innerSql = "select ${D.toUnderline(pk())} from ${tbl()} where 1 = 1 ${where}"
-            Integer totalCount = useD().one(dialect.generateCountSql(innerSql), args, Integer)
+            def innerSql = "select ${D.toUnderline(pk())} from ${tbl()} where 1 = 1 ${where}".toString()
+            def totalCount = useD().one(dialect.generateCountSql(innerSql), args, Integer)
             if (totalCount != null) {
                 pager.totalCount = totalCount.intValue()
                 V first = list[0]

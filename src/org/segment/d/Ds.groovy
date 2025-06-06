@@ -134,13 +134,13 @@ class Ds {
 
     private String generateJdbcUrl(String ip, int port, String db) {
         assert dbType || (dbTypeOtherName && dbTypeOthers[dbTypeOtherName])
-        String name = dbType ? dbType.name() : dbTypeOtherName
+        def name = dbType ? dbType.name() : dbTypeOtherName
         return dbTypeOthers[name].generator.generate(ip, port, db) + generateUrlParamSuffix()
     }
 
     private String getDriver() {
         assert dbType || (dbTypeOtherName && dbTypeOthers[dbTypeOtherName])
-        String name = dbType ? dbType.name() : dbTypeOtherName
+        def name = dbType ? dbType.name() : dbTypeOtherName
         return dbTypeOthers[name].driver
     }
 
@@ -186,7 +186,7 @@ class Ds {
         }
 
         // no parameters in jdbcUrl
-        String urlSimple = jdbcUrl.contains('?') ? jdbcUrl[0..<jdbcUrl.indexOf('?')] : jdbcUrl
+        def urlSimple = jdbcUrl.contains('?') ? jdbcUrl[0..<jdbcUrl.indexOf('?')] : jdbcUrl
         myNameCached = (user ?: 'anon') + '_' + urlSimple.replaceAll(/[:|=|\/|\.]/, '_')
         myNameCached
     }

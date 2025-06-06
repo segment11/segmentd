@@ -33,12 +33,12 @@ class RecordBeanSourceCreator {
     }
 
     void createRecordClass(String table, String pk, String pkg, Map<String, Class> userDefineBeans = null) {
-        String clzName = D.toCamel(table, false) + 'DTO'
+        def clzName = D.toCamel(table, false) + 'DTO'
         def dir = new File(srcDirPath + '/' + pkg.replaceAll(/\./, '/'))
         dir.mkdirs()
 
         def f = new File(dir, clzName + '.groovy')
-        Map<String, Class> bean = rowToBean(table)
+        def bean = rowToBean(table)
         if (userDefineBeans) {
             bean.putAll(userDefineBeans)
         }
