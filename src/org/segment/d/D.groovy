@@ -234,6 +234,12 @@ class D {
                 r.add(jsonTransformer.json(obj))
             } else if (obj instanceof Enum) {
                 r.add(obj.name())
+            } else if (obj instanceof String[]) {
+                r.add(obj.join(','))
+            } else if (obj instanceof Integer[]) {
+                r.add(obj.join(','))
+            } else if (obj instanceof Double[]) {
+                r.add(obj.join(','))
             } else {
                 r.add(obj)
             }
@@ -424,6 +430,23 @@ class D {
                         } else if (methodGet.returnType.superclass == Enum) {
                             fieldType = methodGet.returnType
                             obj = Enum.valueOf(methodGet.returnType, obj.toString())
+                        } else if (methodGet.returnType == String[]) {
+                            fieldType = methodGet.returnType
+                            obj = obj.toString().split(',')
+                        } else if (methodGet.returnType == Integer[]) {
+                            fieldType = methodGet.returnType
+                            def array = obj.toString().split(',')
+                            obj = new Integer[array.length]
+                            for (int j = 0; j < array.length; j++) {
+                                obj[j] = Integer.valueOf(array[j])
+                            }
+                        } else if (methodGet.returnType == Double[]) {
+                            fieldType = methodGet.returnType
+                            def array = obj.toString().split(',')
+                            obj = new Double[array.length]
+                            for (int j = 0; j < array.length; j++) {
+                                obj[j] = Double.valueOf(array[j])
+                            }
                         }
                     }
 
