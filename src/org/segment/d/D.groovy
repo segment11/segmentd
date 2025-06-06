@@ -232,6 +232,8 @@ class D {
                 r.add(dialect instanceof OracleDialect ? new Timestamp(date.time) : sdf.format(date))
             } else if (obj instanceof JSONFiled) {
                 r.add(jsonTransformer.json(obj))
+            } else if (obj instanceof Enum) {
+                r.add(obj.name())
             } else {
                 r.add(obj)
             }
@@ -419,6 +421,9 @@ class D {
                         if (methodGet.returnType.interfaces.any { it == JSONFiled }) {
                             fieldType = methodGet.returnType
                             obj = d.jsonTransformer.read(obj.toString(), fieldType)
+                        } else if (methodGet.returnType.superclass == Enum) {
+                            fieldType = methodGet.returnType
+                            obj = Enum.valueOf(methodGet.returnType, obj.toString())
                         }
                     }
 
