@@ -5,6 +5,10 @@ import spock.lang.Specification
 
 class RecordTest extends Specification {
 
+    static enum Sex {
+        MALE, FEMALE
+    }
+
     static class UserDTO extends Record<UserDTO> {
         Integer id
         String name
@@ -19,6 +23,7 @@ class RecordTest extends Specification {
         Integer id
         String studentName
         Integer age
+        Sex sex
 
         @Override
         String pk() {
@@ -33,7 +38,7 @@ class RecordTest extends Specification {
     def 'base method'() {
         given:
         def user = new UserDTO(id: 1, name: 'kerry')
-        def student = new StudentBaseInfoDTO(id: 1, studentName: 'kerry', age: 32)
+        def student = new StudentBaseInfoDTO(id: 1, studentName: 'kerry', age: 32, sex: Sex.FEMALE)
         student.setProperties([age: 33])
         student.prop('color', 'blue')
         student.prop('color2', 'red')
@@ -46,13 +51,13 @@ class RecordTest extends Specification {
 
         user.tableNameReset('x').tbl() == 'x'
         user.tableFields() == 'id,name'
-        student.tableFields() == 'id,student_name,age'
+        student.tableFields() == 'id,student_name,age,sex'
         student.age == 33
         student.prop('color') == 'blue'
         student.prop('color2') == null
 
-        student.rawProps() == [id: 1, studentName: 'kerry', age: 33]
-        student.rawProps(true) == [id: 1, studentName: 'kerry', age: 33, color: 'blue']
+        student.rawProps() == [id: 1, studentName: 'kerry', age: 33, sex: Sex.FEMALE]
+        student.rawProps(true) == [id: 1, studentName: 'kerry', age: 33, sex: Sex.FEMALE, color: 'blue']
         user2.id == 1
         user3.name == 'kerry'
     }
@@ -65,10 +70,11 @@ class RecordTest extends Specification {
 create table student_base_info(
 id int,
 student_name varchar(50),
-age int
+age int,
+sex varchar(6)
 )
 ''')
-        def student = new StudentBaseInfoDTO(id: 1, studentName: 'kerry', age: 32)
+        def student = new StudentBaseInfoDTO(id: 1, studentName: 'kerry', age: 32, sex: Sex.MALE)
         student.d = d
         10.times {
             student.id = it + 1
