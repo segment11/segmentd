@@ -66,7 +66,7 @@ class Ds {
     // you can set dataSourceInitHandler to init dataSource
     private DruidDataSourceInitHandler dataSourceInitHandler
     // default druid stats filter use mergeStat
-    private String druidDataSourceFilters = 'mergeStat'
+    private String druidDataSourceFilters
     private Map<String, Object> urlParams = [:]
 
     private Sql sql
@@ -229,7 +229,8 @@ class Ds {
         dataSource.maxActive = maxPoolSize
         dataSource.maxWait = 1000 * 30
         dataSource.testWhileIdle = true
-        dataSource.testOnBorrow = true
+//        dataSource.testOnBorrow = true
+//        dataSource.validationQuery = 'select 1'
         dataSource.maxPoolPreparedStatementPerConnectionSize = 5
         dataSource.timeBetweenEvictionRunsMillis = 1000 * 60
         if (druidDataSourceFilters) {
