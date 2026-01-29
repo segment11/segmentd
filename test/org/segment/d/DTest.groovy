@@ -51,9 +51,11 @@ class DTest extends Specification {
 
     def 'underline to camel'() {
         expect:
-        D.toCamel(null) == null
-        D.toCamel('student_name') == 'studentName'
-        D.toCamel('student_name', false) == 'StudentName'
+        def ds = Ds.h2mem('test')
+        def d = new D(ds, new MySQLDialect())
+        d.toCamel(null) == null
+        d.toCamel('student_name') == 'studentName'
+        d.toCamel('student_name', false) == 'StudentName'
     }
 
     def 'camel to underline'() {
@@ -121,6 +123,17 @@ grade varchar(200)
         d.query('select * from a limit 1', Student)[0].studentName == 'kerry0'
         d.one('select * from a where id = ?', [2], Student).studentName == 'kerry2!'
         d.one('select * from a where id = ?', [21], Student).grade.level == 1
+
+        when:
+        d.isMapKeyToCamel = true
+        then:
+        d.one('select count(id) as a_cnt from a') == [aCnt: 30]
+
+        when:
+        d.isMapKeyToCamel = false
+        then:
+        d.one('select count(id) as a_cnt from a') == [a_cnt: 30]
+
         cleanup:
         ds.closeConnect()
     }

@@ -343,6 +343,8 @@ class D {
         args == null ? db.executeUpdate(sql) : db.executeUpdate(sql, transferArgs(args))
     }
 
+    boolean isMapKeyToCamel = true
+
     // for groovy Sql query result set iterate callback
     @CompileStatic
     @Slf4j
@@ -353,6 +355,7 @@ class D {
         }
 
         D d
+        boolean isToCamel = true
         Class<T> clz
         List<T> r
         Map<String, String> colFieldMapping
@@ -407,10 +410,10 @@ class D {
 
                 if (isEx) {
                     Expando ex = t as Expando
-                    ex.setProperty(toCamel(label), obj)
+                    ex.setProperty(isToCamel ? toCamel(label) : label.toLowerCase(), obj)
                 } else if (isMap) {
                     HashMap map = t as HashMap
-                    map.put(toCamel(label), obj)
+                    map.put(isToCamel ? toCamel(label) : label.toLowerCase(), obj)
                 } else {
                     String finalLabel
                     if (colFieldMapping != null) {
@@ -477,6 +480,7 @@ class D {
         }
 
         ToBeanCl beanCl = new ToBeanCl(this)
+        beanCl.isToCamel = isMapKeyToCamel
         beanCl.clz = clz
         beanCl.r = r
         beanCl.colFieldMapping = colFieldMapping
