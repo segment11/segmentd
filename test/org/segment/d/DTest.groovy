@@ -86,7 +86,7 @@ class DTest extends Specification {
 
     def 'ddl execute'() {
         given:
-        def ds = Ds.h2mem('test')
+        def ds = Ds.h2mem('test00')
         def d = new D(ds, new MySQLDialect())
         d.exe('''
 create table a(
@@ -102,7 +102,7 @@ name varchar(50)
 
     def 'insert and update and query'() {
         given:
-        def ds = Ds.h2mem('test')
+        def ds = Ds.h2mem('test11')
         def d = new D(ds, new MySQLDialect())
         d.exe('''
 create table a(
@@ -134,13 +134,20 @@ grade varchar(200)
         then:
         d.one('select count(id) as a_cnt from a') == [a_cnt: 30]
 
+        when:
+        d.isUsePrepareStatement = false
+        d.add(id: 21, studentName: 'kerry21', 'a')
+        d.update([id: 21, studentName: 'kerry21!'], 'a', 'id')
+        then:
+        d.one('select * from a where id = ?', [21], Student).studentName == 'kerry21!'
+
         cleanup:
         ds.closeConnect()
     }
 
     def 'pagination query'() {
         given:
-        def ds = Ds.h2mem('test')
+        def ds = Ds.h2mem('test22')
         def d = new D(ds, new MySQLDialect())
         d.exe('''
 create table a(

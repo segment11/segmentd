@@ -37,7 +37,7 @@ class D {
         return dialect
     }
 
-    private boolean addReturnPk = true
+    boolean addReturnPk = true
 
     D addReturnPk(boolean addReturnPk) {
         this.addReturnPk = addReturnPk
@@ -187,6 +187,8 @@ class D {
         t
     }
 
+    boolean isUsePrepareStatement = true
+
     private static String generateSqlKeys(Set<String> set, String replaced = null) {
         def sb = new StringBuilder()
         int i = 0
@@ -212,6 +214,60 @@ class D {
         def sb = new StringBuilder()
         for (string in strings) {
             sb.append(string)
+        }
+        sb.toString()
+    }
+
+    static String escapeSqlValue(Object value) {
+        if (value == null) {
+            return 'NULL'
+        }
+
+        if (value instanceof Number) {
+            return value.toString()
+        }
+
+        if (value instanceof Boolean) {
+            return value ? 'TRUE' : 'FALSE'
+        }
+
+        if (value instanceof Date) {
+            def sdf = new SimpleDateFormat(DATE_FORMAT_STR)
+            return "'" + sdf.format(value).replace("'", "''") + "'"
+        }
+
+        // String type, including enums, etc.
+        def strValue = value.toString()
+        // Escape single quotes
+        "'" + strValue.replace("'", "''") + "'"
+    }
+
+    static String generateSqlValuesWithoutPlaceholder(Set<String> set, Map<String, Object> rowData) {
+        def sb = new StringBuilder()
+        int i = 0
+        for (key in set) {
+            def value = rowData[key]
+            sb.append(escapeSqlValue(value))
+            if (i != set.size() - 1) {
+                sb.append(',')
+            }
+            i++
+        }
+        sb.toString()
+    }
+
+    static String generateUpdateSetClauseWithoutPlaceholder(Set<String> set, Map<String, Object> rowData) {
+        def sb = new StringBuilder()
+        int i = 0
+        for (key in set) {
+            def value = rowData[key]
+            sb.append(key)
+            sb.append('=')
+            sb.append(escapeSqlValue(value))
+            if (i != set.size() - 1) {
+                sb.append(',')
+            }
+            i++
         }
         sb.toString()
     }
@@ -528,30 +584,55 @@ class D {
 
     Object add(Map<String, Object> one, String table, boolean isKeyCamel = true) {
         Map<String, Object> row = isKeyCamel ? toUnderline(one) : one
-        String insertSql = concatStr('insert into ', table, ' (',
-                generateSqlKeys(row.keySet()), ') values (', generateSqlKeys(row.keySet(), '?'), ')')
-        List args = new ArrayList(row.values())
-        if (addReturnPk) {
-            def resultList = db.executeInsert(insertSql, transferArgs(args))
-            if (!resultList) {
+        if (isUsePrepareStatement) {
+            def insertSql = concatStr('insert into ', table, ' (',
+                    generateSqlKeys(row.keySet()), ') values (', generateSqlKeys(row.keySet(), '?'), ')')
+            List args = new ArrayList(row.values())
+            if (addReturnPk) {
+                def resultList = db.executeInsert(insertSql, transferArgs(args))
+                if (!resultList) {
+                    return null
+                }
+                def subList = resultList[0]
+                return subList ? subList[0] : null
+            } else {
+                db.executeUpdate(insertSql, transferArgs(args))
                 return null
             }
-            def subList = resultList[0]
-            return subList ? subList[0] : null
         } else {
-            db.executeUpdate(insertSql, transferArgs(args))
-            return null
+            // Do not use prepared statement, concatenate SQL directly
+            def insertSql = concatStr('insert into ', table, ' (',
+                    generateSqlKeys(row.keySet()), ') values (', generateSqlValuesWithoutPlaceholder(row.keySet(), row), ')')
+            if (addReturnPk) {
+                def resultList = db.executeInsert(insertSql)
+                if (!resultList) {
+                    return null
+                }
+                def subList = resultList[0]
+                return subList ? subList[0] : null
+            } else {
+                db.executeUpdate(insertSql)
+                return null
+            }
         }
     }
 
     int update(Map<String, Object> one, String table, String pkCol, boolean isKeyCamel = true) {
         Map<String, Object> row = isKeyCamel ? toUnderline(one) : one
         def pkVal = row.remove(pkCol)
-        String updateSql = concatStr('update ', table, ' set ', generateSqlKeys(row.keySet(), '$1=?'),
-                ' where ', pkCol, '=?')
-        def args = new ArrayList(row.values())
-        args.add(pkVal)
-        db.executeUpdate(updateSql, transferArgs(args))
+
+        if (isUsePrepareStatement) {
+            def updateSql = concatStr('update ', table, ' set ', generateSqlKeys(row.keySet(), '$1=?'),
+                    ' where ', pkCol, '=?')
+            def args = new ArrayList(row.values())
+            args.add(pkVal)
+            return db.executeUpdate(updateSql, transferArgs(args))
+        } else {
+            // Do not use prepared statement, concatenate SQL directly
+            def updateSql = concatStr('update ', table, ' set ', generateUpdateSetClauseWithoutPlaceholder(row.keySet(), row),
+                    ' where ', pkCol, '=', escapeSqlValue(pkVal))
+            return db.executeUpdate(updateSql)
+        }
     }
 
     Object add(Object one, String table, Map<String, String> fieldColMapping = null) {
